@@ -1,547 +1,139 @@
 <!DOCTYPE html>
-<html class="light" lang="en">
+<html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-<title>Slate &amp; Cipher — Authentication</title>
-<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
-<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
-<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
-<script id="tailwind-config">
-  tailwind.config = {
-    darkMode: "class",
-    theme: {
-      extend: {
-        colors: {
-          "tertiary": "#000000",
-          "error-container": "#ffdad6",
-          "secondary-fixed-dim": "#b9c7df",
-          "on-primary-fixed-variant": "#003ea8",
-          "inverse-on-surface": "#eff1f3",
-          "tertiary-fixed": "#89f5e7",
-          "error": "#ba1a1a",
-          "primary-fixed-dim": "#b4c5ff",
-          "secondary": "#515f74",
-          "secondary-container": "#d5e3fc",
-          "on-tertiary": "#ffffff",
-          "on-background": "#191c1e",
-          "secondary-fixed": "#d5e3fc",
-          "tertiary-container": "#00201d",
-          "on-primary": "#ffffff",
-          "primary-fixed": "#dbe1ff",
-          "on-error-container": "#93000a",
-          "surface-container-highest": "#e0e3e5",
-          "primary-container": "#00174b",
-          "on-secondary-container": "#57657a",
-          "surface-bright": "#f7f9fb",
-          "inverse-primary": "#b4c5ff",
-          "on-surface-variant": "#45464d",
-          "surface-container-high": "#e6e8ea",
-          "on-primary-fixed": "#00174b",
-          "outline": "#76777d",
-          "surface-container": "#eceef0",
-          "on-secondary-fixed-variant": "#3a485b",
-          "primary": "#000000",
-          "surface-container-lowest": "#ffffff",
-          "on-tertiary-fixed-variant": "#005049",
-          "outline-variant": "#c6c6cd",
-          "surface-tint": "#0053db",
-          "on-primary-container": "#497cff",
-          "surface-variant": "#e0e3e5",
-          "on-tertiary-container": "#0c9488",
-          "on-secondary-fixed": "#0d1c2e",
-          "on-surface": "#191c1e",
-          "surface-container-low": "#f2f4f6",
-          "on-tertiary-fixed": "#00201d",
-          "background": "#f7f9fb",
-          "surface-dim": "#d8dadc",
-          "surface": "#f7f9fb",
-          "inverse-surface": "#2d3133",
-          "tertiary-fixed-dim": "#6bd8cb",
-          "on-secondary": "#ffffff",
-          "on-error": "#ffffff"
-        },
-        fontFamily: {
-          "headline": ["Manrope"],
-          "body": ["Inter"],
-          "label": ["Inter"]
-        },
-        borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "full": "9999px"},
-      },
-    },
-  }
-</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Photo</title>
+
 <style>
-  .material-symbols-outlined {
-    font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
-  }
-  .bg-pattern {
-    background-color: #f7f9fb;
-    background-image: radial-gradient(#c6c6cd 0.5px, transparent 0.5px);
-    background-size: 24px 24px;
-  }
-  .tab-active   { color: #191c1e; font-weight: 700; }
-  .tab-inactive { color: #515f74; font-weight: 500; }
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
 
-  .panel { transition: opacity 0.25s ease, transform 0.25s ease; }
-  .panel-hidden  { opacity: 0; transform: translateY(6px); pointer-events: none; position: absolute; top: 0; left: 0; right: 0; }
-  .panel-visible { opacity: 1; transform: translateY(0);   pointer-events: all;  position: relative; }
+body{
+    width:100vw;
+    height:100vh;
+    overflow:hidden;
+    background:#850000;
+}
 
-  #toast { transition: opacity 0.3s ease, transform 0.3s ease; }
-  #toast.show { opacity: 1 !important; transform: translateY(0) !important; }
+/* Container stacks both images on top of each other */
+.image-stack {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
 
-  .strength-bar { transition: width 0.4s ease, background-color 0.4s ease; }
+/* Base image — fills the screen */
+.img-base {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+    animation: fadeInBase 2s ease-out forwards;
+}
 
-  .spinner {
-    border: 2px solid rgba(255,255,255,0.35);
-    border-top-color: white;
-    border-radius: 50%;
-    width: 16px; height: 16px;
-    animation: spin 0.7s linear infinite;
-    display: inline-block;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
+@keyframes fadeInBase {
+    0% {
+        opacity: 0;
+        transform: scale(1.04);
+    }
+    100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Overlay image — transparent PNG slides in from top */
+.img-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: auto;
+    object-fit: contain;
+    object-position: top center;
+    display: block;
+    animation: slideInFromTop 2s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards;
+    opacity: 0; /* hidden until animation starts */
+}
+
+@keyframes slideInFromTop {
+    0% {
+        transform: translateY(-110%);
+        opacity: 0;
+    }
+    40% {
+        opacity: 0.6;
+    }
+    75% {
+        transform: translateY(4px);
+        opacity: 1;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}
+
+/* Bottom overlay — transparent PNG slides in from bottom */
+.img-overlay-bottom {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 70%;
+    height: auto;
+    object-fit: contain;
+    object-position: bottom center;
+    display: block;
+    animation: slideInFromBottom 2s cubic-bezier(0.16, 1, 0.3, 1) 0.6s forwards;
+    opacity: 0;
+    filter: drop-shadow(0 8px 24px rgba(255, 100, 150, 0.7))
+            drop-shadow(0 0 40px rgba(255, 80, 130, 0.5))
+            drop-shadow(0 0 80px rgba(255, 120, 160, 0.3));
+}
+
+@keyframes slideInFromBottom {
+    0% {
+        transform: translateX(-50%) translateY(110%);
+        opacity: 0;
+    }
+    40% {
+        opacity: 0.6;
+    }
+    75% {
+        transform: translateX(-50%) translateY(-4px);
+        opacity: 1;
+    }
+    100% {
+        transform: translateX(-50%) translateY(0);
+        opacity: 1;
+    }
+}
 </style>
 </head>
-<body class="bg-surface font-body text-on-surface min-h-screen flex flex-col">
+<body>
 
-<!-- Toast -->
-<div id="toast" class="fixed top-6 left-1/2 -translate-x-1/2 z-50 opacity-0 -translate-y-2 flex items-center gap-3 px-5 py-3.5 rounded-xl shadow-lg text-sm font-semibold pointer-events-none max-w-sm w-full" style="background:#191c1e;color:#fff;">
-  <span class="material-symbols-outlined text-base" id="toast-icon">check_circle</span>
-  <span id="toast-msg">Done.</span>
+<div class="image-stack">
+    <!-- Background image -->
+    <img src="images/1.png" alt="Background Photo" class="img-base">
+    <!-- Transparent PNG overlay slides in from top -->
+    <img src="images/2.png" alt="Overlay Photo" class="img-overlay">
+    <!-- Transparent PNG overlay slides in from bottom -->
+    <img src="images/v.png" alt="Bottom Overlay" class="img-overlay-bottom">
 </div>
 
-<main class="flex-grow flex items-center justify-center p-6 bg-pattern relative overflow-hidden">
-  <div class="absolute top-[-10%] right-[-5%] w-96 h-96 rounded-full bg-secondary-container/20 blur-3xl"></div>
-  <div class="absolute bottom-[-10%] left-[-5%] w-80 h-80 rounded-full bg-primary-container/5 blur-3xl"></div>
-
-  <div class="w-full max-w-md z-10">
-    <!-- Brand Header -->
-    <div class="text-center mb-8">
-      <div class="inline-flex items-center justify-center p-3 mb-4 rounded-xl bg-surface-container-lowest shadow-sm">
-        <span class="material-symbols-outlined text-primary text-3xl">token</span>
-      </div>
-      <h1 class="font-headline text-3xl font-extrabold tracking-tight text-on-surface mb-2" id="page-title">Welcome Back</h1>
-      <p class="text-secondary font-body" id="page-subtitle">Log in to access your dashboard.</p>
-    </div>
-
-    <!-- Auth Card -->
-    <div class="bg-surface-container-lowest rounded-xl shadow-[0_12px_40px_rgba(25,28,30,0.04)] overflow-hidden">
-
-      <!-- Tabs -->
-      <div class="flex border-b border-outline-variant/20">
-        <button id="tab-login" class="tab-active flex-1 py-4 text-sm font-headline tracking-wide transition-colors relative">
-          Sign In
-          <span id="underline-login" class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary transition-opacity"></span>
-        </button>
-        <button id="tab-register" class="tab-inactive flex-1 py-4 text-sm font-headline tracking-wide transition-colors relative">
-          Create Account
-          <span id="underline-register" class="absolute bottom-0 left-0 right-0 h-0.5 bg-primary opacity-0 transition-opacity"></span>
-        </button>
-      </div>
-
-      <div class="p-8 lg:p-10 relative" style="min-height:360px;">
-
-        <!-- LOGIN PANEL -->
-        <div id="panel-login" class="panel panel-visible">
-          <form id="form-login" class="space-y-5">
-            <div class="space-y-2">
-              <label class="font-label text-xs font-semibold tracking-wider uppercase text-secondary" for="login-email">Work Email</label>
-              <input class="w-full px-4 py-3 bg-surface-container-highest border-none rounded-lg focus:ring-2 focus:ring-surface-tint/40 text-on-surface placeholder:text-outline-variant transition-all"
-                id="login-email" placeholder="name@organization.com" required type="email"/>
-            </div>
-            <div class="space-y-2">
-              <div class="flex justify-between items-center">
-                <label class="font-label text-xs font-semibold tracking-wider uppercase text-secondary" for="login-password">Password</label>
-                <button type="button" id="btn-forgot-open" class="text-xs font-medium text-primary hover:underline underline-offset-4">Forgot Password?</button>
-              </div>
-              <div class="relative">
-                <input class="w-full px-4 py-3 pr-11 bg-surface-container-highest border-none rounded-lg focus:ring-2 focus:ring-surface-tint/40 text-on-surface placeholder:text-outline-variant transition-all"
-                  id="login-password" placeholder="••••••••" required type="password"/>
-                <button type="button" id="toggle-login-pw" class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors">
-                  <span class="material-symbols-outlined text-xl">visibility_off</span>
-                </button>
-              </div>
-            </div>
-            <div class="flex items-center">
-              <label class="flex items-center group cursor-pointer">
-                <input id="remember-me" class="w-4 h-4 border-outline-variant rounded text-primary focus:ring-primary" type="checkbox"/>
-                <span class="ml-2 text-sm text-secondary group-hover:text-on-surface transition-colors">Keep me signed in</span>
-              </label>
-            </div>
-            <button id="btn-login" class="w-full bg-primary text-on-primary font-headline font-bold py-4 rounded-lg hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 group" type="submit">
-              <span id="btn-login-text">Sign In</span>
-              <span class="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform" id="btn-login-arrow">arrow_forward</span>
-            </button>
-          </form>
-        </div>
-
-        <!-- REGISTER PANEL -->
-        <div id="panel-register" class="panel panel-hidden">
-          <form id="form-register" class="space-y-5">
-            <div class="grid grid-cols-2 gap-4">
-              <div class="space-y-2">
-                <label class="font-label text-xs font-semibold tracking-wider uppercase text-secondary" for="reg-firstname">First Name</label>
-                <input class="w-full px-4 py-3 bg-surface-container-highest border-none rounded-lg focus:ring-2 focus:ring-surface-tint/40 text-on-surface placeholder:text-outline-variant transition-all"
-                  id="reg-firstname" placeholder="Jane" required type="text"/>
-              </div>
-              <div class="space-y-2">
-                <label class="font-label text-xs font-semibold tracking-wider uppercase text-secondary" for="reg-lastname">Last Name</label>
-                <input class="w-full px-4 py-3 bg-surface-container-highest border-none rounded-lg focus:ring-2 focus:ring-surface-tint/40 text-on-surface placeholder:text-outline-variant transition-all"
-                  id="reg-lastname" placeholder="Doe" required type="text"/>
-              </div>
-            </div>
-            <div class="space-y-2">
-              <label class="font-label text-xs font-semibold tracking-wider uppercase text-secondary" for="reg-email">Work Email</label>
-              <input class="w-full px-4 py-3 bg-surface-container-highest border-none rounded-lg focus:ring-2 focus:ring-surface-tint/40 text-on-surface placeholder:text-outline-variant transition-all"
-                id="reg-email" placeholder="name@organization.com" required type="email"/>
-            </div>
-            <div class="space-y-2">
-              <label class="font-label text-xs font-semibold tracking-wider uppercase text-secondary" for="reg-password">Password</label>
-              <div class="relative">
-                <input class="w-full px-4 py-3 pr-11 bg-surface-container-highest border-none rounded-lg focus:ring-2 focus:ring-surface-tint/40 text-on-surface placeholder:text-outline-variant transition-all"
-                  id="reg-password" placeholder="Min. 8 characters" required type="password"/>
-                <button type="button" id="toggle-reg-pw" class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors">
-                  <span class="material-symbols-outlined text-xl">visibility_off</span>
-                </button>
-              </div>
-              <div class="space-y-1">
-                <div class="h-1 w-full bg-surface-container-high rounded-full overflow-hidden">
-                  <div id="strength-bar" class="strength-bar h-full w-0 rounded-full"></div>
-                </div>
-                <p id="strength-label" class="text-xs"></p>
-              </div>
-            </div>
-            <div class="space-y-2">
-              <label class="font-label text-xs font-semibold tracking-wider uppercase text-secondary" for="reg-confirm">Confirm Password</label>
-              <div class="relative">
-                <input class="w-full px-4 py-3 pr-11 bg-surface-container-highest border-none rounded-lg focus:ring-2 focus:ring-surface-tint/40 text-on-surface placeholder:text-outline-variant transition-all"
-                  id="reg-confirm" placeholder="Repeat password" required type="password"/>
-                <button type="button" id="toggle-reg-confirm" class="absolute right-3 top-1/2 -translate-y-1/2 text-outline hover:text-on-surface transition-colors">
-                  <span class="material-symbols-outlined text-xl">visibility_off</span>
-                </button>
-              </div>
-            </div>
-            <label class="flex items-start gap-2 cursor-pointer group">
-              <input id="agree-terms" class="mt-0.5 w-4 h-4 border-outline-variant rounded text-primary focus:ring-primary flex-shrink-0" type="checkbox" required/>
-              <span class="text-sm text-secondary group-hover:text-on-surface transition-colors leading-relaxed">
-                I agree to the <a href="#" class="font-semibold text-on-surface hover:underline underline-offset-2">Terms of Service</a>
-                and <a href="#" class="font-semibold text-on-surface hover:underline underline-offset-2">Privacy Policy</a>
-              </span>
-            </label>
-            <button id="btn-register" class="w-full bg-primary text-on-primary font-headline font-bold py-4 rounded-lg hover:opacity-90 active:scale-[0.98] transition-all flex items-center justify-center gap-2 group" type="submit">
-              <span id="btn-register-text">Create Account</span>
-              <span class="material-symbols-outlined text-sm group-hover:translate-x-1 transition-transform" id="btn-register-arrow">arrow_forward</span>
-            </button>
-          </form>
-        </div>
-
-      </div>
-    </div><!-- end card -->
-
-    <!-- SSO -->
-    <div class="mt-8 text-center">
-      <p class="font-label text-xs font-semibold tracking-wider uppercase text-secondary mb-4">Or continue with</p>
-      <div class="flex justify-center gap-4">
-        <button id="btn-google" class="flex items-center justify-center w-full bg-surface-container-low hover:bg-surface-container-high text-on-surface-variant p-3 rounded-lg transition-colors active:scale-95">
-          <img alt="Google" class="w-5 h-5 mr-2" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC8tQs1XLJfhkbgQfixGHxYwl2KVcFLdrQQZEXF952_QdBKmEGOn9iH-B9LOKwVe6foOG9i9GCtBAZtzS1YHjKEYflMjPt3RJOYdx0E7j-9oWPjM3bYqEFf04bCieNgE8cetB8qFw96qvs0EEVpD1bvMBKXAG8H0LSsqldB0RuC6UHpQrFxZNAhQqGR31PNss-Rlj4rBtIf05e9SKUCJhf2yW_lAvmJecfdOzVGacNtlTd4qIBsAKRPTKEOCSKmSUiFG2CkyqEZsCnp"/>
-          <span class="text-sm font-semibold">Google</span>
-        </button>
-        <button id="btn-sso" class="flex items-center justify-center w-full bg-surface-container-low hover:bg-surface-container-high text-on-surface-variant p-3 rounded-lg transition-colors active:scale-95">
-          <span class="material-symbols-outlined mr-2">terminal</span>
-          <span class="text-sm font-semibold">SSO</span>
-        </button>
-      </div>
-    </div>
-  </div>
-</main>
-
-<!-- Forgot Password Modal -->
-<div id="modal-forgot" class="fixed inset-0 z-50 hidden items-center justify-center p-6">
-  <div id="modal-backdrop" class="absolute inset-0 bg-on-surface/30 backdrop-blur-sm"></div>
-  <div class="relative bg-surface-container-lowest rounded-xl p-8 w-full max-w-sm shadow-2xl z-10">
-    <h2 class="font-headline text-xl font-bold text-on-surface mb-1">Reset Password</h2>
-    <p class="text-sm text-secondary mb-6">Enter your email and we'll send a reset link.</p>
-    <div class="space-y-2 mb-6">
-      <label class="font-label text-xs font-semibold tracking-wider uppercase text-secondary" for="forgot-email">Email</label>
-      <input class="w-full px-4 py-3 bg-surface-container-highest border-none rounded-lg focus:ring-2 focus:ring-surface-tint/40 text-on-surface placeholder:text-outline-variant transition-all"
-        id="forgot-email" placeholder="name@organization.com" type="email"/>
-    </div>
-    <div class="flex gap-3">
-      <button id="btn-forgot-cancel" class="flex-1 py-3 rounded-lg border border-outline-variant text-secondary font-semibold text-sm hover:bg-surface-container transition-colors">Cancel</button>
-      <button id="btn-forgot-send" class="flex-1 py-3 rounded-lg bg-primary text-on-primary font-bold text-sm hover:opacity-90 transition-all flex items-center justify-center gap-2">
-        <span id="forgot-btn-text">Send Link</span>
-      </button>
-    </div>
-  </div>
-</div>
-
-<!-- Footer -->
-<footer class="w-full py-6 bg-surface border-t border-outline-variant/20">
-  <div class="flex flex-col md:flex-row justify-between items-center px-8 gap-4">
-    <p class="font-label text-xs tracking-wider uppercase text-secondary">© 2024 Slate &amp; Cipher. All rights reserved.</p>
-    <div class="flex gap-6">
-      <a class="font-label text-xs tracking-wider uppercase text-secondary hover:text-on-surface transition-colors" href="#">Privacy Policy</a>
-      <a class="font-label text-xs tracking-wider uppercase text-secondary hover:text-on-surface transition-colors" href="#">Terms of Service</a>
-      <a class="font-label text-xs tracking-wider uppercase text-secondary hover:text-on-surface transition-colors" href="#">Security</a>
-    </div>
-  </div>
-</footer>
-
-<!-- ═══════════════════════════════════════════════════════
-     ONE SCRIPT — Firebase SDK + all UI logic combined.
-     Using type="module" is required for Firebase imports.
-     All event listeners are attached with addEventListener
-     so they work correctly inside module scope.
-═══════════════════════════════════════════════════════ -->
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-  import {
-    getAuth,
-    signInWithEmailAndPassword,
-    createUserWithEmailAndPassword,
-    updateProfile,
-    sendPasswordResetEmail,
-    GoogleAuthProvider,
-    signInWithPopup,
-    setPersistence,
-    browserLocalPersistence,
-    browserSessionPersistence,
-    onAuthStateChanged
-  } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-
-  /* ── Firebase init ── */
-  const app  = initializeApp({
-    apiKey:            "AIzaSyAmiRbKhh6H7KSu7pNG2vwPqRAvOtIhIBA",
-    authDomain:        "helloworld-3a625.firebaseapp.com",
-    projectId:         "helloworld-3a625",
-    storageBucket:     "helloworld-3a625.firebasestorage.app",
-    messagingSenderId: "300395033324",
-    appId:             "1:300395033324:web:a7d2fac08f9488d4476bc9",
-    measurementId:     "G-CGDESZ1KJR"
-  });
-  const auth           = getAuth(app);
-  const googleProvider = new GoogleAuthProvider();
-
-  /* ════════════════════════════════
-     UTILITY FUNCTIONS
-  ════════════════════════════════ */
-  function showToast(msg, icon = 'check_circle', color = '#22c55e') {
-    document.getElementById('toast-msg').textContent  = msg;
-    document.getElementById('toast-icon').textContent = icon;
-    document.getElementById('toast-icon').style.color = color;
-    const t = document.getElementById('toast');
-    t.classList.add('show');
-    setTimeout(() => t.classList.remove('show'), 3500);
-  }
-
-  function friendlyError(code) {
-    const map = {
-      'auth/user-not-found':         'No account found with that email.',
-      'auth/wrong-password':         'Incorrect password. Please try again.',
-      'auth/invalid-credential':     'Invalid email or password.',
-      'auth/email-already-in-use':   'An account with this email already exists.',
-      'auth/weak-password':          'Password must be at least 6 characters.',
-      'auth/invalid-email':          'Please enter a valid email address.',
-      'auth/too-many-requests':      'Too many attempts. Please try again later.',
-      'auth/network-request-failed': 'Network error. Check your connection.',
-      'auth/popup-closed-by-user':   'Sign-in popup was closed.',
-    };
-    if (!map[code]) console.error('Firebase error code:', code);
-    return map[code] || `Auth error: ${code || 'unknown'}. See browser console.`;
-  }
-
-  function setLoading(btnId, textId, arrowId, loading, label) {
-    const btn   = document.getElementById(btnId);
-    const text  = document.getElementById(textId);
-    const arrow = arrowId ? document.getElementById(arrowId) : null;
-    btn.disabled      = loading;
-    btn.style.opacity = loading ? '0.75' : '';
-    text.innerHTML    = loading ? '<span class="spinner"></span>' : label;
-    if (arrow) arrow.style.display = loading ? 'none' : '';
-  }
-
-  function togglePw(inputId, btn) {
-    const input = document.getElementById(inputId);
-    const icon  = btn.querySelector('.material-symbols-outlined');
-    const isHidden = input.type === 'password';
-    input.type       = isHidden ? 'text' : 'password';
-    icon.textContent = isHidden ? 'visibility' : 'visibility_off';
-  }
-
-  function checkStrength(val) {
-    const bar   = document.getElementById('strength-bar');
-    const label = document.getElementById('strength-label');
-    let score = 0;
-    if (val.length >= 8)           score++;
-    if (/[A-Z]/.test(val))         score++;
-    if (/[0-9]/.test(val))         score++;
-    if (/[^A-Za-z0-9]/.test(val)) score++;
-    const levels = [
-      { w: '0%',   c: 'transparent', t: ''         },
-      { w: '25%',  c: '#ba1a1a',     t: 'Weak'     },
-      { w: '50%',  c: '#f59e0b',     t: 'Fair'     },
-      { w: '75%',  c: '#3b82f6',     t: 'Good'     },
-      { w: '100%', c: '#22c55e',     t: 'Strong ✓' },
-    ];
-    const lvl = val.length === 0 ? levels[0] : levels[score];
-    bar.style.width           = lvl.w;
-    bar.style.backgroundColor = lvl.c;
-    label.textContent         = lvl.t;
-    label.style.color         = lvl.c;
-  }
-
-  /* ════════════════════════════════
-     TAB SWITCHING
-  ════════════════════════════════ */
-  function switchTab(tab) {
-    const isLogin = tab === 'login';
-    document.getElementById('panel-login').className    = `panel ${isLogin  ? 'panel-visible' : 'panel-hidden'}`;
-    document.getElementById('panel-register').className = `panel ${!isLogin ? 'panel-visible' : 'panel-hidden'}`;
-    document.getElementById('tab-login').className      = `${isLogin  ? 'tab-active' : 'tab-inactive'} flex-1 py-4 text-sm font-headline tracking-wide transition-colors relative`;
-    document.getElementById('tab-register').className   = `${!isLogin ? 'tab-active' : 'tab-inactive'} flex-1 py-4 text-sm font-headline tracking-wide transition-colors relative`;
-    document.getElementById('underline-login').style.opacity    = isLogin  ? '1' : '0';
-    document.getElementById('underline-register').style.opacity = !isLogin ? '1' : '0';
-    document.getElementById('page-title').textContent    = isLogin ? 'Welcome Back' : 'Create Account';
-    document.getElementById('page-subtitle').textContent = isLogin ? 'Log in to access your dashboard.' : 'Join Slate & Cipher today.';
-  }
-
-  /* ════════════════════════════════
-     MODAL HELPERS
-  ════════════════════════════════ */
-  function openModal()  {
-    const m = document.getElementById('modal-forgot');
-    m.classList.remove('hidden');
-    m.classList.add('flex');
-  }
-  function closeModal() {
-    const m = document.getElementById('modal-forgot');
-    m.classList.add('hidden');
-    m.classList.remove('flex');
-  }
-
-  /* ════════════════════════════════
-     AUTH STATE OBSERVER
-  ════════════════════════════════ */
-  onAuthStateChanged(auth, (user) => {
-    if (user) {
-      console.log('Logged in:', user.email);
-      // ✅ Redirect to your dashboard — uncomment the line below:
-      window.location.href = "home.html";
-    }
-  });
-
-  /* ════════════════════════════════
-     WIRE UP ALL EVENT LISTENERS
-     (must use addEventListener here
-      since we're inside a module)
-  ════════════════════════════════ */
-
-  // Tabs
-  document.getElementById('tab-login').addEventListener('click',    () => switchTab('login'));
-  document.getElementById('tab-register').addEventListener('click', () => switchTab('register'));
-
-  // Password visibility toggles
-  document.getElementById('toggle-login-pw').addEventListener('click',    function() { togglePw('login-password', this); });
-  document.getElementById('toggle-reg-pw').addEventListener('click',      function() { togglePw('reg-password', this); });
-  document.getElementById('toggle-reg-confirm').addEventListener('click', function() { togglePw('reg-confirm', this); });
-
-  // Live password strength meter
-  document.getElementById('reg-password').addEventListener('input', (e) => checkStrength(e.target.value));
-
-  // Forgot password modal
-  document.getElementById('btn-forgot-open').addEventListener('click',   openModal);
-  document.getElementById('btn-forgot-cancel').addEventListener('click', closeModal);
-  document.getElementById('modal-backdrop').addEventListener('click',    closeModal);
-
-  // SSO buttons
-  document.getElementById('btn-google').addEventListener('click', async () => {
-    try {
-      await signInWithPopup(auth, googleProvider);
-      showToast('Signed in with Google!', 'check_circle', '#22c55e');
-    } catch (err) {
-      showToast(friendlyError(err.code), 'error', '#ba1a1a');
-    }
-  });
-  document.getElementById('btn-sso').addEventListener('click', () => {
-    showToast('SSO is not configured yet.', 'info', '#3b82f6');
-  });
-
-  // Send password reset email
-  document.getElementById('btn-forgot-send').addEventListener('click', async () => {
-    const email = document.getElementById('forgot-email').value.trim();
-    if (!email) { showToast('Please enter your email.', 'error', '#ba1a1a'); return; }
-    const btnText = document.getElementById('forgot-btn-text');
-    btnText.textContent = 'Sending…';
-    try {
-      await sendPasswordResetEmail(auth, email);
-      showToast('Reset link sent! Check your inbox.', 'check_circle', '#22c55e');
-      document.getElementById('forgot-email').value = '';
-      closeModal();
-    } catch (err) {
-      showToast(friendlyError(err.code), 'error', '#ba1a1a');
-    } finally {
-      btnText.textContent = 'Send Link';
-    }
-  });
-
-  /* ── LOGIN ── */
-  document.getElementById('form-login').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email    = document.getElementById('login-email').value.trim();
-    const password = document.getElementById('login-password').value;
-    const remember = document.getElementById('remember-me').checked;
-
-    setLoading('btn-login', 'btn-login-text', 'btn-login-arrow', true, 'Sign In');
-    try {
-      await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
-      await signInWithEmailAndPassword(auth, email, password);
-      showToast('Signed in successfully!', 'check_circle', '#22c55e');
-    } catch (err) {
-      showToast(friendlyError(err.code), 'error', '#ba1a1a');
-    } finally {
-      setLoading('btn-login', 'btn-login-text', 'btn-login-arrow', false, 'Sign In');
-    }
-  });
-
-  /* ── REGISTER ── */
-  document.getElementById('form-register').addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const first    = document.getElementById('reg-firstname').value.trim();
-    const last     = document.getElementById('reg-lastname').value.trim();
-    const email    = document.getElementById('reg-email').value.trim();
-    const password = document.getElementById('reg-password').value;
-    const confirm  = document.getElementById('reg-confirm').value;
-    const agreed   = document.getElementById('agree-terms').checked;
-
-    if (!agreed) {
-      showToast('Please accept the Terms of Service.', 'error', '#ba1a1a');
-      return;
-    }
-    if (password !== confirm) {
-      showToast("Passwords don't match.", 'error', '#ba1a1a');
-      return;
-    }
-    if (password.length < 8) {
-      showToast('Password must be at least 8 characters.', 'error', '#ba1a1a');
-      return;
-    }
-
-    setLoading('btn-register', 'btn-register-text', 'btn-register-arrow', true, 'Create Account');
-    try {
-      const cred = await createUserWithEmailAndPassword(auth, email, password);
-      await updateProfile(cred.user, { displayName: `${first} ${last}` });
-      showToast(`Account created! Welcome, ${first}!`, 'check_circle', '#22c55e');
-      document.getElementById('form-register').reset();
-      checkStrength('');
-      setTimeout(() => switchTab('login'), 1800);
-    } catch (err) {
-      showToast(friendlyError(err.code), 'error', '#ba1a1a');
-    } finally {
-      setLoading('btn-register', 'btn-register-text', 'btn-register-arrow', false, 'Create Account');
-    }
-  });
-
+<script>
+    setTimeout(function() {
+        window.location.href = 'gallery.html';
+    }, 8000);
 </script>
+
 </body>
 </html>

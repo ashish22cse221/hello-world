@@ -1,0 +1,482 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Ashish & Sanju - Memories</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,700&family=Cormorant+Garamond:ital,wght@0,400;1,400;1,600&family=Dancing+Script:wght@600;700&family=Plus+Jakarta+Sans:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --maroon:    #4a0018;
+    --maroon-mid:#6b0022;
+    --maroon-hi: #8b0030;
+    --rose:      #ff6b8a;
+    --rose-soft: #ffb2bc;
+    --gold:      #d4a843;
+    --gold-light:#f0cc6a;
+    --paper:     #fffef9;
+    --shadow:    rgba(0,0,0,0.6);
+  }
+
+  html, body {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: var(--maroon);
+    font-family: "Plus Jakarta Sans", sans-serif;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ── royal maroon gradient ── */
+  .bg-gradient {
+    position: fixed; inset: 0; z-index: 0; pointer-events: none;
+    background: linear-gradient(145deg,
+      #1c0008 0%,
+      #3a0014 15%,
+      #5c001e 30%,
+      #7a0028 45%,
+      #6a001e 58%,
+      #420012 72%,
+      #280008 85%,
+      #120003 100%
+    );
+  }
+
+  /* gold top shimmer */
+  .bg-gradient::before {
+    content: "";
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(ellipse 80% 30% at 50% 0%,   rgba(212,168,67,0.22) 0%, transparent 60%),
+      radial-gradient(ellipse 60% 40% at 100% 100%, rgba(140,0,40,0.5)   0%, transparent 55%),
+      radial-gradient(ellipse 60% 40% at 0%   100%, rgba(100,0,30,0.45)  0%, transparent 55%),
+      radial-gradient(ellipse 40% 50% at 50%  50%,  rgba(180,0,50,0.12)  0%, transparent 65%);
+  }
+
+  /* noise grain */
+  .bg-gradient::after {
+    content: "";
+    position: absolute; inset: 0; opacity: 0.045;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.75' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+
+  /* ── canvas for JS particles ── */
+  #particleCanvas {
+    position: fixed; inset: 0; z-index: 1; pointer-events: none;
+  }
+
+  /* ── page layout ── */
+  .page {
+    position: relative; z-index: 2;
+    width: 100%; height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(12px, 2vh, 24px);
+    padding: clamp(14px, 2.5vh, 32px) 20px;
+  }
+
+  /* ── header ── */
+  .gallery-header { text-align: center; flex-shrink: 0; }
+
+  .gallery-header h1 {
+    font-family: "Playfair Display", serif;
+    font-size: clamp(2.4rem, 7vw, 4.2rem);
+    font-weight: 700;
+    font-style: italic;
+    color: #ffffff;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    text-shadow:
+      0 2px 10px rgba(0,0,0,0.7),
+      0 0  40px rgba(212,168,67,0.35),
+      0 0  80px rgba(255,100,130,0.2);
+  }
+
+  .gallery-header p {
+    font-family: "Cormorant Garamond", serif;
+    font-size: clamp(1.1rem, 2.8vw, 1.5rem);
+    font-style: italic;
+    color: #ffffff;
+    margin-top: 7px;
+    letter-spacing: 0.03em;
+    opacity: 0.85;
+    text-shadow:
+      0 2px 6px rgba(0,0,0,0.6),
+      0 0 28px rgba(212,168,67,0.25);
+  }
+
+  /* ── stack container ── */
+  .stack-wrap {
+    position: relative;
+    width:  clamp(240px, 52vw, 360px);
+    height: clamp(320px, 62vw, 470px);
+    flex-shrink: 0;
+  }
+
+  /* ── polaroid card ── */
+  .card {
+    position: absolute; inset: 0;
+    background: var(--paper);
+    border: 1px solid rgba(255,255,255,0.12);
+    padding: 12px 12px 48px;
+    box-shadow:
+      0 6px 20px rgba(0,0,0,0.45),
+      0 24px 60px -16px var(--shadow),
+      0 0 0 1px rgba(212,168,67,0.08);
+    cursor: grab;
+    user-select: none;
+    touch-action: none;
+    will-change: transform;
+    transition: box-shadow 300ms ease;
+  }
+  .card:active { cursor: grabbing; }
+
+  .card .photo {
+    width: 100%; height: 100%;
+    overflow: hidden;
+    background: #1a0008;
+  }
+  .card .photo img {
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
+    pointer-events: none; user-select: none;
+    -webkit-user-drag: none;
+  }
+
+  /* tape */
+  .card .tape {
+    position: absolute; height: 20px; z-index: 5;
+    background: rgba(255,255,255,0.4);
+    border: 1px solid rgba(255,255,255,0.55);
+    backdrop-filter: blur(3px);
+    box-shadow: 0 1px 4px rgba(0,0,0,0.12);
+  }
+
+  /* drag labels */
+  .like-label, .nope-label {
+    position: absolute; top: 22px;
+    font-family: "Dancing Script", cursive;
+    font-size: 1.6rem; font-weight: 700;
+    border: 3px solid; border-radius: 6px;
+    padding: 4px 12px; opacity: 0;
+    transition: opacity 150ms ease;
+    pointer-events: none; z-index: 10;
+  }
+  .like-label { left:18px;  color:var(--rose); border-color:var(--rose); transform:rotate(-15deg); }
+  .nope-label { right:18px; color:var(--gold); border-color:var(--gold); transform:rotate(15deg);  }
+
+  /* counter hidden */
+  .counter { display: none; }
+
+  /* hint */
+  .hint {
+    font-family: "Cormorant Garamond", serif;
+    font-style: italic;
+    font-size: clamp(0.82rem, 1.8vw, 1rem);
+    color: #ffffff;
+    opacity: 0.72;
+    display: flex; align-items: center; gap: 7px;
+    flex-shrink: 0;
+    text-shadow: 0 1px 5px rgba(0,0,0,0.55);
+    margin-top: clamp(14px, 3.5vh, 32px);
+  }
+  .hint svg { width:16px; height:16px; fill:#ffffff; opacity:0.8; }
+
+  /* fly-off */
+  @keyframes flyLeft  { to { transform: translateX(-140vw) rotate(-35deg); opacity:0; } }
+  @keyframes flyRight { to { transform: translateX(140vw)  rotate(35deg);  opacity:0; } }
+  .fly-left  { animation: flyLeft  0.42s cubic-bezier(0.4,0,1,1) forwards; }
+  .fly-right { animation: flyRight 0.42s cubic-bezier(0.4,0,1,1) forwards; }
+
+  /* loop badge */
+  .loop-badge {
+    position: fixed; bottom:18px; right:18px; z-index:10;
+    font-family: "Dancing Script", cursive;
+    font-size: 0.88rem; color:#ffffff; opacity:0.5;
+    pointer-events: none;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.5);
+  }
+
+  @media (max-width: 480px) {
+    .stack-wrap { width:min(80vw,280px); height:min(102vw,370px); }
+  }
+</style>
+</head>
+<body>
+
+<div class="bg-gradient"></div>
+<canvas id="particleCanvas"></canvas>
+
+<div class="page">
+  <header class="gallery-header">
+    <h1>Ashish &amp; Sanju</h1>
+    <p>Every picture, a piece of our forever.</p>
+  </header>
+
+  <div class="stack-wrap" id="stack"></div>
+  <div class="counter"    id="counter"></div>
+
+  <div class="hint">
+    <svg viewBox="0 0 24 24"><path d="M20 12l-8-8-1.4 1.4L17.2 11H4v2h13.2l-6.6 6.6L12 21l8-8z"/></svg>
+    Drag aside to see the next memory
+  </div>
+</div>
+
+<div class="loop-badge">∞ infinite loop</div>
+
+<script>
+/* ══════════════════════════════════════════
+   PARTICLE SYSTEM
+══════════════════════════════════════════ */
+(function() {
+  const canvas = document.getElementById("particleCanvas");
+  const ctx    = canvas.getContext("2d");
+
+  function resize() {
+    canvas.width  = window.innerWidth;
+    canvas.height = window.innerHeight;
+  }
+  resize();
+  window.addEventListener("resize", resize);
+
+  // Particle types: gold dust, rose sparkles, tiny stars
+  const COLORS = [
+    "rgba(212,168,67,",   // gold
+    "rgba(255,178,188,",  // rose
+    "rgba(255,255,255,",  // white star
+    "rgba(240,200,100,",  // warm gold
+    "rgba(200,80,110,",   // deep rose
+  ];
+
+  class Particle {
+    constructor() { this.reset(true); }
+
+    reset(initial) {
+      this.x    = Math.random() * canvas.width;
+      this.y    = initial ? Math.random() * canvas.height : canvas.height + 10;
+      this.size = Math.random() * 2.8 + 0.4;
+      this.speedY = -(Math.random() * 0.5 + 0.15);
+      this.speedX = (Math.random() - 0.5) * 0.3;
+      this.color  = COLORS[Math.floor(Math.random() * COLORS.length)];
+      this.alpha  = 0;
+      this.maxAlpha = Math.random() * 0.7 + 0.2;
+      this.fadeIn  = true;
+      this.life    = 0;
+      this.maxLife = Math.random() * 300 + 150;
+      // glow type: 0=dot, 1=star, 2=cross
+      this.type = Math.random() < 0.3 ? 1 : (Math.random() < 0.15 ? 2 : 0);
+      this.twinkleSpeed = Math.random() * 0.04 + 0.01;
+      this.twinkleOffset = Math.random() * Math.PI * 2;
+    }
+
+    update() {
+      this.life++;
+      this.x += this.speedX;
+      this.y += this.speedY;
+
+      // twinkle
+      const twinkle = Math.sin(this.life * this.twinkleSpeed + this.twinkleOffset) * 0.3 + 0.7;
+
+      if (this.life < 40)       this.alpha = (this.life / 40) * this.maxAlpha * twinkle;
+      else if (this.life > this.maxLife - 40)
+                                this.alpha = ((this.maxLife - this.life) / 40) * this.maxAlpha * twinkle;
+      else                      this.alpha = this.maxAlpha * twinkle;
+
+      if (this.life >= this.maxLife || this.y < -10) this.reset(false);
+    }
+
+    draw() {
+      ctx.save();
+      ctx.globalAlpha = Math.max(0, this.alpha);
+
+      if (this.type === 0) {
+        // glowing dot
+        const grad = ctx.createRadialGradient(this.x, this.y, 0, this.x, this.y, this.size * 3);
+        grad.addColorStop(0,   this.color + "1)");
+        grad.addColorStop(0.4, this.color + "0.6)");
+        grad.addColorStop(1,   this.color + "0)");
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size * 3, 0, Math.PI * 2);
+        ctx.fillStyle = grad;
+        ctx.fill();
+        // bright core
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size * 0.5, 0, Math.PI * 2);
+        ctx.fillStyle = this.color + "1)";
+        ctx.fill();
+
+      } else if (this.type === 1) {
+        // 4-point star sparkle
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.life * 0.02);
+        const s = this.size * 2.5;
+        ctx.beginPath();
+        for (let i = 0; i < 4; i++) {
+          const angle = (i / 4) * Math.PI * 2;
+          ctx.moveTo(0, 0);
+          ctx.lineTo(Math.cos(angle) * s, Math.sin(angle) * s);
+        }
+        ctx.strokeStyle = this.color + "0.9)";
+        ctx.lineWidth   = this.size * 0.5;
+        ctx.lineCap     = "round";
+        ctx.stroke();
+        // center glow
+        const g2 = ctx.createRadialGradient(0,0,0, 0,0, s);
+        g2.addColorStop(0, this.color + "0.5)");
+        g2.addColorStop(1, this.color + "0)");
+        ctx.beginPath();
+        ctx.arc(0, 0, s, 0, Math.PI * 2);
+        ctx.fillStyle = g2;
+        ctx.fill();
+
+      } else {
+        // tiny cross
+        ctx.translate(this.x, this.y);
+        const c = this.size * 2;
+        ctx.strokeStyle = this.color + "0.85)";
+        ctx.lineWidth   = this.size * 0.4;
+        ctx.lineCap     = "round";
+        ctx.beginPath(); ctx.moveTo(-c,0); ctx.lineTo(c,0); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0,-c); ctx.lineTo(0,c); ctx.stroke();
+      }
+
+      ctx.restore();
+    }
+  }
+
+  // Create 90 particles
+  const particles = Array.from({ length: 90 }, () => new Particle());
+
+  function loop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    particles.forEach(p => { p.update(); p.draw(); });
+    requestAnimationFrame(loop);
+  }
+  loop();
+})();
+
+/* ══════════════════════════════════════════
+   POLAROID STACK
+══════════════════════════════════════════ */
+const photos = [
+  "images/11.JPG","images/12.jpg","images/13.jpg","images/14.jpg","images/15.jpg","images/16.jpg",
+  "images/17.jpg","images/18.jpg","images/19.JPG","images/20.JPG","images/21.JPG","images/22.jpg"
+];
+
+const TILTS  = [0, -4, 3, -6, 5];
+const SCALES = [1, 0.975, 0.95, 0.925, 0.9];
+const Y_OFFS = [0, 7, 14, 20, 26];
+
+let current   = 0;
+const stackEl  = document.getElementById("stack");
+const counterEl = document.getElementById("counter");
+
+function idx(offset) { return (current + offset) % photos.length; }
+
+function buildStack() {
+  stackEl.innerHTML = "";
+  const visible = Math.min(5, photos.length);
+
+  for (let i = visible - 1; i >= 0; i--) {
+    const card = document.createElement("div");
+    card.className = "card";
+    card.style.transform = `translateY(${Y_OFFS[i]}px) rotate(${TILTS[i]}deg) scale(${SCALES[i]})`;
+    card.style.zIndex = visible - i;
+
+    if (i === 0) {
+      const tape = document.createElement("div");
+      tape.className = "tape";
+      tape.style.cssText = "width:68px;top:-10px;left:50%;transform:translateX(-50%) rotate(-3deg);";
+      card.appendChild(tape);
+
+      const like = document.createElement("div");
+      like.className = "like-label";
+      like.textContent = "♡ next";
+      card.appendChild(like);
+
+      const nope = document.createElement("div");
+      nope.className = "nope-label";
+      nope.textContent = "next ♡";
+      card.appendChild(nope);
+    }
+
+    const photo = document.createElement("div");
+    photo.className = "photo";
+    const img = document.createElement("img");
+    img.src = photos[idx(i)];
+    img.alt = `Memory ${idx(i) + 1}`;
+    img.draggable = false;
+    photo.appendChild(img);
+    card.appendChild(photo);
+
+    if (i === 0) makeDraggable(card);
+    stackEl.appendChild(card);
+  }
+}
+
+function makeDraggable(card) {
+  let startX=0, startY=0, curX=0, curY=0, active=false;
+  const THRESHOLD = 85;
+  const likeLabel = card.querySelector(".like-label");
+  const nopeLabel = card.querySelector(".nope-label");
+
+  const getPoint = e => e.touches ? e.touches[0] : e;
+
+  function onStart(e) {
+    active = true;
+    const p = getPoint(e);
+    startX = p.clientX; startY = p.clientY;
+    card.style.transition = "none";
+  }
+
+  function onMove(e) {
+    if (!active) return;
+    e.preventDefault();
+    const p = getPoint(e);
+    curX = p.clientX - startX;
+    curY = p.clientY - startY;
+    card.style.transform = `translate(${curX}px,${curY}px) rotate(${curX * 0.07}deg)`;
+    const ratio = Math.min(Math.abs(curX) / THRESHOLD, 1);
+    if      (curX >  20) { likeLabel.style.opacity = ratio; nopeLabel.style.opacity = 0; }
+    else if (curX < -20) { nopeLabel.style.opacity = ratio; likeLabel.style.opacity = 0; }
+    else                 { likeLabel.style.opacity = 0;     nopeLabel.style.opacity = 0; }
+  }
+
+  function onEnd() {
+    if (!active) return;
+    active = false;
+    likeLabel.style.opacity = 0;
+    nopeLabel.style.opacity = 0;
+
+    if (Math.abs(curX) > THRESHOLD) {
+      const dir = curX > 0 ? "fly-right" : "fly-left";
+      card.style.transition = "";
+      card.classList.add(dir);
+      card.addEventListener("animationend", () => {
+        current = (current + 1) % photos.length;
+        buildStack();
+      }, { once: true });
+    } else {
+      card.style.transition = "transform 0.45s cubic-bezier(0.16,1,0.3,1)";
+      card.style.transform  = `rotate(${TILTS[0]}deg) scale(${SCALES[0]})`;
+      curX = 0; curY = 0;
+    }
+  }
+
+  card.addEventListener("mousedown",  onStart);
+  card.addEventListener("touchstart", onStart, { passive: true });
+  window.addEventListener("mousemove",  onMove);
+  window.addEventListener("touchmove",  onMove, { passive: false });
+  window.addEventListener("mouseup",   onEnd);
+  window.addEventListener("touchend",  onEnd);
+}
+
+buildStack();
+</script>
+</body>
+</html>
