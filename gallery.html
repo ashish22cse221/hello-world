@@ -205,6 +205,71 @@
   @media (max-width: 480px) {
     .stack-wrap { width:min(80vw,280px); height:min(102vw,370px); }
   }
+
+  /* ── music button ── */
+  .music-btn {
+    position: fixed;
+    top: 18px; right: 18px;
+    z-index: 100;
+    width: 58px; height: 58px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #7a0028 0%, #4a0018 100%);
+    border: 1.5px solid rgba(212,168,67,0.5);
+    box-shadow:
+      0 4px 16px rgba(0,0,0,0.5),
+      0 0 0 0 rgba(212,168,67,0.4);
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1px;
+    user-select: none;
+    transition: transform 200ms ease, box-shadow 200ms ease;
+  }
+  .music-btn:hover {
+    transform: scale(1.08);
+    box-shadow: 0 6px 22px rgba(0,0,0,0.55), 0 0 18px rgba(212,168,67,0.3);
+  }
+  .music-btn:active { transform: scale(0.95); }
+
+  .music-label {
+    font-family: "Dancing Script", cursive;
+    font-size: 0.78rem;
+    font-weight: 700;
+    color: rgba(212,168,67,0.95);
+    line-height: 1;
+    letter-spacing: 0.04em;
+    text-shadow: 0 0 8px rgba(212,168,67,0.6);
+  }
+  .music-icon {
+    font-size: 1.1rem;
+    color: #ffffff;
+    line-height: 1;
+    transition: opacity 200ms ease;
+  }
+
+  /* pulsing ring when playing */
+  .music-ring {
+    position: absolute; inset: -4px;
+    border-radius: 50%;
+    border: 2px solid rgba(212,168,67,0.35);
+    animation: musicPulse 2s ease-out infinite;
+    pointer-events: none;
+  }
+  @keyframes musicPulse {
+    0%   { transform: scale(1);    opacity: 0.7; }
+    70%  { transform: scale(1.35); opacity: 0;   }
+    100% { transform: scale(1.35); opacity: 0;   }
+  }
+  .music-btn.paused .music-ring {
+    animation: none;
+    opacity: 0;
+  }
+  .music-btn.paused {
+    border-color: rgba(255,255,255,0.2);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+  }
 </style>
 </head>
 <body>
@@ -214,7 +279,7 @@
 
 <div class="page">
   <header class="gallery-header">
-    <h1>Ashish &amp; Sanju</h1>
+    <h1>Sanju &amp; Ashish</h1>
     <p>Every picture, a piece of our forever.</p>
   </header>
 
@@ -228,6 +293,14 @@
 </div>
 
 <div class="loop-badge">∞ infinite loop</div>
+
+<!-- Music button -->
+<div class="music-btn" id="musicBtn" onclick="toggleMusic()">
+  <span class="music-label">2nd</span>
+  <div class="music-ring"></div>
+</div>
+
+<audio id="bgMusic" src="images/music.mp3" loop preload="auto"></audio>
 
 <script>
 /* ══════════════════════════════════════════
@@ -477,6 +550,32 @@ function makeDraggable(card) {
 }
 
 buildStack();
+
+/* ── MUSIC ── */
+const audio     = document.getElementById("bgMusic");
+const musicBtn  = document.getElementById("musicBtn");
+
+function toggleMusic() {
+  if (audio.paused) {
+    audio.play();
+    musicBtn.classList.remove("paused");
+  } else {
+    audio.pause();
+    musicBtn.classList.add("paused");
+  }
+}
+
+// Autoplay — if browser blocks it, start on first interaction
+audio.play().catch(() => {
+  musicBtn.classList.add("paused");
+  const startMusic = () => {
+    audio.play().then(() => {
+      musicBtn.classList.remove("paused");
+    }).catch(() => {});
+  };
+  document.addEventListener("click",      startMusic, { once: true });
+  document.addEventListener("touchstart", startMusic, { once: true });
+});
 </script>
 </body>
 </html>
